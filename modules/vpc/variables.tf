@@ -3,6 +3,11 @@ variable "ZONE" {
     description = "Cloud Zone"
 }
 
+variable "RESOURCE_GROUP" {
+    type = string
+    description = "Resource Group"
+}
+
 variable "VPC" {
     type = string
     description = "VPC name"
@@ -11,9 +16,4 @@ variable "VPC" {
 variable "SUBNET" {
     type = string
     description = "Subnet name"
-}
-
-variable "SECURITYGROUP" {
-    type = string
-    description = "Security group name"
 }

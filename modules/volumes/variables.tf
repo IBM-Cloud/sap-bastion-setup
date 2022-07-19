@@ -19,16 +19,19 @@ variable "VOL_PROFILE" {
 	default		= "custom"
 }
 
-
 variable "VOL_IOPS" {
 	type		= string
 	description = "Volume IOPS"
 	default		= "3000"
 }
 
-
 variable "VOL1" {
 	type		= string
 	description = "Volume 1 Size"
 	default		= "100"
+}
+
+variable "RESOURCE_GROUP" {
+    type = string
+    description = "Resource Group"
 }

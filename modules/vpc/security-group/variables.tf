@@ -19,6 +19,6 @@ variable "SUBNET" {
 }
 
 variable "HOSTNAME" {
-    type = string
-    description = "VSI Hostname"
+  type        = string
+  description = "VSI Hostname"
 }

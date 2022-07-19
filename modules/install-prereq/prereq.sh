@@ -2,10 +2,9 @@
 ###########
 
 # Updating OS
-sudo dnf update -y;
-# Installing basic needed packages
-sudo dnf install --nogpgcheck -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm;
-sudo dnf install -y python3 ansible wget unzip git screen crudini dos2unix nc;
+dnf update --security -y;
+subscription-manager repos --enable ansible-2-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-e4s-rpms;
+sudo dnf install -y python3 ansible wget unzip git dos2unix nc tmux yum-utils bind-utils;
 
 # Preparing FS
 echo -e "\nPreparing FS"
@@ -24,22 +23,29 @@ echo -e "\nInstalling IBM CLI plugins and needed packages"
 sudo dnf  install jq perl-JSON-PP -y
 curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
 ibmcloud plugin install vpc-infrastructure
+ibmcloud plugin install schematics
 ibmcloud plugin update
 ibmcloud -v
 
 # Installing Terraform
 echo -e "\nInstalling Terraform"
-wget https://releases.hashicorp.com/terraform/1.0.3/terraform_1.0.3_linux_amd64.zip -P /tmp/
-unzip /tmp/terraform_1.0.3_linux_amd64.zip -d /usr/local/bin
+wget https://releases.hashicorp.com/terraform/1.1.9/terraform_1.1.9_linux_amd64.zip -P /tmp/
+unzip /tmp/terraform_1.1.9_linux_amd64.zip -d /usr/local/bin
 terraform -v
 
 # Preparing Ansible
 echo -e "\nSetting ANSIBLE_HOST_KEY_CHECKING to False"
 echo "export ANSIBLE_HOST_KEY_CHECKING=False" >> ~/.bash_profile
-crudini --set --format=lines /etc/ansible/ansible.cfg defaults host_key_checking False
-crudini --set --format=lines /etc/ansible/ansible.cfg ssh_connection ssh_args "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-crudini --set --format=lines /etc/ansible/ansible.cfg defaults log_path /var/log/ansible.log
-crudini --set --format=lines /etc/ansible/ansible.cfg  ssh_connection transfer_method smart
+cp /etc/ansible/ansible.cfg /etc/ansible/ansible.cfg.original.backup
+
+echo "[defaults]
+remote_user = root
+host_key_checking = False
+log_path = /var/log/ansible.log
+callback_whitelist = profile_tasks
+[ssh_connection]
+ssh_args = -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+transfer_method = smart" > /etc/ansible/ansible.cfg
 
 # Adding Storage user
 mkdir /storage/.ssh && cp .ssh/authorized_keys /storage/.ssh/
@@ -47,8 +53,14 @@ sudo useradd -c "Storage sftp user" storage -d /storage -M -s "/bin/bash"; sudo 
 chown storage -R /storage/
 
 # Configuring SSH Server
-echo "AllowTcpForwarding yes
-ClientAliveInterval 1200
-ClientAliveCountMax 10
-TCPKeepAlive yes" >> /etc/ssh/sshd_config
+echo "ClientAliveInterval 1200" >> /etc/ssh/sshd_config
+echo "ClientAliveCountMax 10" >> /etc/ssh/sshd_config
+echo "TCPKeepAlive yes" >> /etc/ssh/sshd_config
+sed -i "s/#MaxSessions 10/MaxSessions 50/" /etc/ssh/sshd_config
+sed -i "s/X11Forwarding yes/X11Forwarding no/" /etc/ssh/sshd_config
+sed -i "s/PermitRootLogin yes/PermitRootLogin prohibit-password/" /etc/ssh/sshd_config
+sed -i "s/#AllowAgentForwarding yes/AllowAgentForwarding no/" /etc/ssh/sshd_config
+echo "MaxStartups 50:30:80"  >> /etc/ssh/sshd_config
+echo "AllowStreamLocalForwarding no"  >> /etc/ssh/sshd_config
+echo 'AuthenticationMethods publickey' >> /etc/ssh/sshd_config
 sudo service sshd reload

@@ -19,6 +19,11 @@ variable "SUBNET" {
 }
 
 variable "HOSTNAME" {
-    type = string
-    description = "VSI Hostname"
+  type        = string
+  description = "VSI Hostname"
+}
+
+variable "SSH-SOURCE-IP-CIDR-ACCESS" {
+  type        = list(string)
+  description = "List of CIDR/IPs for source SSH access."
 }
