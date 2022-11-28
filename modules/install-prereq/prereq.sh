@@ -3,7 +3,7 @@
 
 # Updating OS
 dnf update --security -y;
-subscription-manager repos --enable ansible-2-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-baseos-eus-rpms rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-e4s-rpms;
+
 sudo dnf install -y python3 ansible wget unzip git dos2unix nc tmux yum-utils bind-utils;
 
 # Preparing FS
