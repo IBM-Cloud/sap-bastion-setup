@@ -130,6 +130,9 @@ SUBNET = "sapvpcbastion-subnet"<br />
 VPC = "sapvpcbastion"<br />
 ZONE = "eu-de-2"<br />
 
+The Terraform version used for deployment should be >= 1.3.6. 
+Note: The deployment was tested with Terraform 1.3.6
+
 ### Related links:
 - [Securely Access Remote Instances with a Bastion Host](https://www.ibm.com/cloud/blog/tutorial-securely-access-remote-instances-with-a-bastion-host)
 - [VPNs for VPC overview: Site-to-site gateways and Client-to-site servers.](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-overview)
