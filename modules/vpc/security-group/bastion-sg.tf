@@ -11,12 +11,8 @@ data "ibm_is_vpc" "vpc" {
   name = var.VPC
 }
 
-data "ibm_is_subnet" "subnet" {
-  name = var.SUBNET
-}
-
 data "ibm_resource_group" "group" {
-  name		= var.RESOURCE_GROUP
+  name = var.RESOURCE_GROUP
 }
 
 # this is the SG applied to the bastion instance
@@ -25,7 +21,7 @@ resource "ibm_is_security_group" "securitygroup" {
   lifecycle {
     create_before_destroy = true
   }
-  vpc  = data.ibm_is_vpc.vpc.id
+  vpc            = data.ibm_is_vpc.vpc.id
   resource_group = data.ibm_resource_group.group.id
 }
 
@@ -35,7 +31,7 @@ locals {
   cidr_schematics_EU = ["158.175.0.0/16", "158.176.0.0/15", "141.125.75.80/28", "161.156.139.192/28", "149.81.103.128/28", "161.156.37.164/27", "141.125.142.102/26", "158.176.111.68/30", "149.81.123.68/27"]
   cidr_schematics_US = ["169.44.0.0/14", "169.60.0.0/14", "169.55.82.140/26", "169.60.69.10/27", "169.62.49.135/27", "169.62.204.36/26"]
 
-  schematics = concat (local.cidr_schematics_EU , local.cidr_schematics_US )
+  schematics = concat(local.cidr_schematics_EU, local.cidr_schematics_US)
 
   # base rules for maintenance repo's, DNS
   sg_baserules = [
@@ -109,7 +105,7 @@ resource "ibm_is_security_group_rule" "inbound_icmp_all" {
 
 
 resource "ibm_is_security_group_rule" "inbound_ssh_schematics" {
-  for_each = toset(local.schematics)
+  for_each  = toset(local.schematics)
   group     = ibm_is_security_group.securitygroup.id
   direction = "inbound"
   remote    = each.value
@@ -120,7 +116,7 @@ resource "ibm_is_security_group_rule" "inbound_ssh_schematics" {
 }
 
 resource "ibm_is_security_group_rule" "inbound_sg_all" {
-  group		= ibm_is_security_group.securitygroup.id
-  direction	= "inbound"
-  remote	= ibm_is_security_group.securitygroup.id
+  group     = ibm_is_security_group.securitygroup.id
+  direction = "inbound"
+  remote    = ibm_is_security_group.securitygroup.id
 }

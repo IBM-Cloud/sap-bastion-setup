@@ -3,13 +3,21 @@ data "ibm_is_vpc" "vpc" {
 }
 
 data "ibm_resource_group" "group" {
-  name		= var.RESOURCE_GROUP
+  name = var.RESOURCE_GROUP
 }
 
+resource "random_string" "random_suffix" {
+  length  = 10
+  special = false
+  upper   = false
+}
+
+
 resource "ibm_is_public_gateway" "pg" {
-  name = "public-gateway-${var.HOSTNAME}"
-  vpc  = data.ibm_is_vpc.vpc.id
-  zone = var.ZONE
+  depends_on     = [random_string.random_suffix]
+  name           = "public-gateway-${random_string.random_suffix.result}-${var.HOSTNAME}"
+  vpc            = data.ibm_is_vpc.vpc.id
+  zone           = var.ZONE
   resource_group = data.ibm_resource_group.group.id
 
   timeouts {
@@ -19,9 +27,9 @@ resource "ibm_is_public_gateway" "pg" {
 
 resource "ibm_is_subnet" "subnet" {
   zone                     = var.ZONE
-  resource_group = data.ibm_resource_group.group.id
+  resource_group           = data.ibm_resource_group.group.id
   name                     = var.SUBNET
   vpc                      = data.ibm_is_vpc.vpc.id
-  public_gateway = ibm_is_public_gateway.pg.id
+  public_gateway           = ibm_is_public_gateway.pg.id
   total_ipv4_address_count = 32
 }

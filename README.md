@@ -2,7 +2,7 @@
 
 
 ## Description
-This Terraform example for IBM Cloud Schematics demonstrates how to  perform an automated deployment of  **SAP BASTION and STORAGE setup** on top of **Red Hat Enterprise Linux 8.4**. It shows how to deploy an IBM Cloud Gen2 VPC with a bastion host with secure remote SSH access.
+This Terraform example for IBM Cloud Schematics demonstrates how to  perform an automated deployment of  **SAP BASTION with 3 zones support in the VPC and STORAGE setup** on top of **Red Hat Enterprise Linux 8.6**. It shows how to deploy an IBM Cloud Gen2 VPC with a bastion host with secure remote SSH access.
 
 The intended usage is for remote software installation using Terraform remote-exec and Ansible playbooks executed by Schematics.
 
@@ -10,7 +10,7 @@ The example and Terraform modules only seek to implement a 'reasonable' set of b
 
 
 **It contains:**  
-- Terraform scripts for deploying a VPC, Subnet, Security Group with deafault and custom rules, a Public Gateway for SNAT, a volume and a VSI.
+- Terraform scripts for deploying a VPC, Subnet, Security Group with default and custom rules, a Public Gateway for SNAT, a volume and a VSI.
 - Bash scripts to install  the prerequisites for SAP BASTION&STORAGE VSI and other SAP solutions.
 
 ## Prerequisites
@@ -20,7 +20,8 @@ In order to apply the steps from this article, you should have a general underst
 For the script configuration add your IBM Cloud API Key variable under IBM SCHEMATICS,  "SETTINGS" menu, editing the variable "ibmcloud_api_key" and  using sensitive option.
 
 ## VSI Configuration
-The VSI is configured with Red Hat Enterprise Linux 8.4 (amd64), has a minimal of two SSH keys configured to be accessed by the root user and one storage volume as described below,  to be filled in, under the "SETTINGS" menu, variables fields in IBM Schematics.
+The VSI is configured with Red Hat Enterprise Linux 8.6 (amd64), has a minimal of two SSH keys configured to be accessed by the root user and one storage volume as described below,  to be filled in, under the "SETTINGS" menu, variables fields in IBM Schematics.
+The VSI will be deployed in the first zone, first subnet (chosen from a list of zones, subnets), specified by the user.  The same is true for the VSI volume, which will be deployed in the first zone.
 The storage volume is mounted under "/storage" path, and can be accessed with the user "storage" via  your "private_ssh_key" added as a variable.
 
 **Software configuration:**
@@ -41,16 +42,15 @@ private_ssh_key | Input id_rsa private key content (Sensitive* value).
 SSH_KEYS | List of SSH Keys IDs that are allowed to SSH as root to the VSI. Can contain one or more IDs. The list of SSH Keys is available [here](https://cloud.ibm.com/vpc-ext/compute/sshKeys). <br /> Sample input (use your own SSH IDS from IBM Cloud):<br /> [ "r010-57bfc315-f9e5-46bf-bf61-d87a24a9ce7a" , "r010-3fcd9fe7-d4a7-41ce-8bb3-d96e936b2c7e" ]
 RESOURCE_GROUP | EXISTING Resource Group for VPC, subnet, FLOATING IP, security group, VSI and Volume resources. The list of Resource Groups is available [here](https://cloud.ibm.com/account/resource-groups).
 REGION | The cloud region where to deploy the solution. <br /> The regions and zones for VPC are listed [here](https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones#zones-vpc). <br /> Review supported locations in IBM Cloud Schematics [here](https://cloud.ibm.com/docs/schematics?topic=schematics-locations).<br /> Sample value: eu-de.
-ZONE | The cloud zone where to deploy the solution. <br /> Sample value: eu-de-2.
-VPC_EXISTS | Please mention if the chosen VPC exists or not (use 'yes' or 'no'). If you choose 'no' as an option, a new VPC will be created.
-SUBNET_EXISTS | Please mention if the chosen SUBNET exists or not (use 'yes' or 'no'). If you choose 'no' as an option, a new SUBNET with a new SECURITY_GROUP will be created in the existing VPC.
+ZONES | The cloud zone where to deploy the solution, list of zones name. Can be multiple values seprated by commas. ZONEs name should be a list of strings, zones should be 1 or less than or equal to 3. <br />  Example ["eu-de-1", "eu-de-2", "eu-de-3"]
+SUBNETS | The list of subnet names. Can be multiple values seprated by commas. SUBNETs name should be a list of strings, subnets should be 1 or less than or equal to 3.  <br /> Example ["sn-23000000-01", "sn-23000000-02", "sn-23000000-03"]. <br /> The list of Subnets is available [here](https://cloud.ibm.com/vpc-ext/network/subnets)
+VPC_EXISTS | Please mention if the chosen VPC exists or not (use 'yes' or 'no'). If you choose 'no' as an option, a new VPC will be created. If the VPC_EXISTS is set to yes, the specified SUBNETS are verified to determine if they exist in the provided VPC; if any of the user-provided SUBNETS do not exist in the existing VPC, those subnets are created using the selected ZONES and SUBNETS.If VPC_EXISTS is set to no, a new VPC will be created, along with all supplied SUBNETS in the provided ZONES.
 VPC | The name of the VPC. The list of VPCs is available [here](https://cloud.ibm.com/vpc-ext/network/vpcs)
-SUBNET | The name of the Subnet. The list of Subnets is available [here](https://cloud.ibm.com/vpc-ext/network/subnets)
 ADD-SOURCE-IP-CIDR | Please mention if you want to add a range of IPs or CIDR (use 'yes' or 'no'). If you choose 'yes' as an option, The IP/s or CIDR will be added as source INBOUND SSH access to the BASTION server.
 SSH-SOURCE-IP-CIDR-ACCESS | List of CIDR/IPs for source SSH access.<br /> Sample input: [ "10.243.64.0/27" , "89.76.89.156" , "5.15.114.40" , "161.156.167.199" ]
 HOSTNAME | The Hostname for the VSI. The hostname must have up to 13 characters.
 PROFILE |  The profile used for the VSI. A list of profiles is available [here](https://cloud.ibm.com/docs/vpc?topic=vpc-profiles) <br /> Default value: "bx2-2x8"
-IMAGE | The OS image used for the VSI. A list of images is available [here](https://cloud.ibm.com/docs/vpc?topic=vpc-about-images).<br /> Default value: ibm-redhat-8-4-minimal-amd64-1
+IMAGE | The OS image used for the VSI. A list of images is available [here](https://cloud.ibm.com/docs/vpc?topic=vpc-about-images).<br /> Default value: ibm-redhat-8-6-minimal-amd64-3
 VOL1 [number] | The size for the disk in GB to be attached to the  BASTION VSI as storage for the SAP deployment kits. The mount point for the new volume is: "/storage". <br /> Default value: 100 GB.
 
 Obs: Sensitive* - The variable value is not displayed in your workspace details after it is stored.
@@ -126,9 +126,8 @@ HOSTNAME = "sapbastionsch"<br />
 PRIVATE-IP = "10.243.64.4"<br />
 REGION = "eu-de"<br />
 SECURITY_GROUP = "bastion-sg-sapvpcbastion"<br />
-SUBNET = "sapvpcbastion-subnet"<br />
 VPC = "sapvpcbastion"<br />
-ZONE = "eu-de-2"<br />
+
 
 The Terraform version used for deployment should be >= 1.3.6. 
 Note: The deployment was tested with Terraform 1.3.6

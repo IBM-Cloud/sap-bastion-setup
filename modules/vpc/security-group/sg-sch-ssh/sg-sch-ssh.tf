@@ -2,12 +2,8 @@ data "ibm_is_vpc" "vpc" {
   name = var.VPC
 }
 
-data "ibm_is_subnet" "subnet" {
-  name = var.SUBNET
-}
-
 data "ibm_resource_group" "group" {
-  name		= var.RESOURCE_GROUP
+  name = var.RESOURCE_GROUP
 }
 
 data "local_file" "input" {
@@ -16,8 +12,8 @@ data "local_file" "input" {
 
 # This is the SG applied to the bastion instance as source ip from the Deployment Workspace Schematics Server
 resource "ibm_is_security_group" "sg-sch-ssh" {
-  name = "bastion-sg-deployment-sch-ssh-${var.HOSTNAME}"
-  vpc  = data.ibm_is_vpc.vpc.id
+  name           = "bastion-sg-deployment-sch-ssh-${var.HOSTNAME}"
+  vpc            = data.ibm_is_vpc.vpc.id
   resource_group = data.ibm_resource_group.group.id
 }
 

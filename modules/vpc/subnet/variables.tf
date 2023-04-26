@@ -4,8 +4,8 @@ variable "ZONE" {
 }
 
 variable "RESOURCE_GROUP" {
-    type = string
-    description = "Resource Group"
+  type        = string
+  description = "Resource Group"
 }
 
 variable "VPC" {
@@ -19,6 +19,6 @@ variable "SUBNET" {
 }
 
 variable "HOSTNAME" {
-    type = string
-    description = "VSI Hostname"
+  type        = string
+  description = "VSI Hostname"
 }
