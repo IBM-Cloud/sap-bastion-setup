@@ -22,8 +22,7 @@ sudo df -h;
 echo -e "\nInstalling IBM CLI plugins and needed packages"
 sudo dnf  install jq perl-JSON-PP -y
 curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-ibmcloud plugin install vpc-infrastructure
-ibmcloud plugin install schematics
+ibmcloud plugin install vpc-infrastructure schematics cloud-object-storage
 ibmcloud plugin update
 ibmcloud -v
 
