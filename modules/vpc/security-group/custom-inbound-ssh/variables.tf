@@ -13,7 +13,7 @@ variable "HOSTNAME" {
   description = "VSI Hostname"
 }
 
-variable "SSH-SOURCE-IP-CIDR-ACCESS" {
+variable "SSH_SOURCE_IP_CIDR_ACCESS" {
   type        = list(string)
   description = "List of CIDR/IPs for source SSH access."
 }

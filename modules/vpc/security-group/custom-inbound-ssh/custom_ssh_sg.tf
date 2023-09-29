@@ -14,7 +14,7 @@ resource "ibm_is_security_group" "sg-ssh" {
 }
 
 resource "ibm_is_security_group_rule" "custom_inbound_ssh_access" {
-  for_each  = toset(var.SSH-SOURCE-IP-CIDR-ACCESS)
+  for_each  = toset(var.SSH_SOURCE_IP_CIDR_ACCESS)
   group     = ibm_is_security_group.sg-ssh.id
   direction = "inbound"
   remote    = each.value

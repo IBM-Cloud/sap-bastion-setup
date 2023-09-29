@@ -51,8 +51,8 @@ module "custom-ssh" {
   RESOURCE_GROUP            = var.RESOURCE_GROUP
   VPC                       = var.VPC
   HOSTNAME                  = var.HOSTNAME
-  SSH-SOURCE-IP-CIDR-ACCESS = var.SSH-SOURCE-IP-CIDR-ACCESS
-  count                     = (var.ADD-SOURCE-IP-CIDR == "yes" ? 1 : 0)
+  SSH_SOURCE_IP_CIDR_ACCESS = var.SSH_SOURCE_IP_CIDR_ACCESS
+  count                     = (var.ADD_SOURCE_IP_CIDR == "yes" ? 1 : 0)
 }
 
 module "volumes" {
@@ -87,5 +87,5 @@ module "install-prereq" {
   source          = "./modules/install-prereq"
   depends_on      = [module.vsi]
   IP              = module.vsi.FLOATING-IP
-  private_ssh_key = var.private_ssh_key
+  private_ssh_key = var.PRIVATE_SSH_KEY
 }

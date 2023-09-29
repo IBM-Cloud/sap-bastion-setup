@@ -1,4 +1,4 @@
-variable "private_ssh_key" {
+variable "PRIVATE_SSH_KEY" {
   type        = string
   sensitive   = true
   description = "Input id_rsa private key content."
@@ -76,22 +76,22 @@ variable "VPC" {
   }
 }
 
-variable "ADD-SOURCE-IP-CIDR" {
+variable "ADD_SOURCE_IP_CIDR" {
   type        = string
   description = "Please mention if you want to add a range of IPs or CIDR (use 'yes' or 'no').\n If you choose 'yes' as an option,  The IP/s or CIDR will be added as source INBOUND SSH access to the BASTION server."
   default     = "no"
   validation {
-    condition     = var.ADD-SOURCE-IP-CIDR == "yes" || var.ADD-SOURCE-IP-CIDR == "no"
+    condition     = var.ADD_SOURCE_IP_CIDR == "yes" || var.ADD_SOURCE_IP_CIDR == "no"
     error_message = "The value for this parameter can only be yes or no."
   }
 }
 
-variable "SSH-SOURCE-IP-CIDR-ACCESS" {
+variable "SSH_SOURCE_IP_CIDR_ACCESS" {
   type        = list(string)
   description = "Add the list of CIDR/IPs for source SSH access. Cam be multiple values separated by commas. Change the sample default one with your own CIDR/IPs"
   default     = ["192.168.0.1/32"]
   validation {
-    condition     = !contains(var.SSH-SOURCE-IP-CIDR-ACCESS, "0.0.0.0/0")
+    condition     = !contains(var.SSH_SOURCE_IP_CIDR_ACCESS, "0.0.0.0/0")
     error_message = "Not allowed source IP."
   }
 }
@@ -110,7 +110,7 @@ variable "PROFILE" {
 variable "IMAGE" {
   type        = string
   description = "VSI OS Image"
-  default     = "ibm-redhat-8-6-minimal-amd64-3"
+  default     = "ibm-redhat-8-8-minimal-amd64-2"
 }
 
 variable "VOL1" {

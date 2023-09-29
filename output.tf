@@ -2,11 +2,11 @@ output "HOSTNAME" {
   value = module.vsi.HOSTNAME
 }
 
-output "FLOATING-IP" {
+output "FLOATING_IP" {
   value = module.vsi.FLOATING-IP
 }
 
-output "PRIVATE-IP" {
+output "PRIVATE_IP" {
   value = module.vsi.PRIVATE-IP
 }
 
