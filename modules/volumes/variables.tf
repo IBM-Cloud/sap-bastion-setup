@@ -11,13 +11,7 @@ variable "HOSTNAME" {
 variable "VOL_PROFILE" {
   type        = string
   description = "Volume Profile"
-  default     = "custom"
-}
-
-variable "VOL_IOPS" {
-  type        = string
-  description = "Volume IOPS"
-  default     = "3000"
+  default     = "general-purpose"
 }
 
 variable "VOL1" {
@@ -30,3 +24,4 @@ variable "RESOURCE_GROUP" {
   type        = string
   description = "Resource Group"
 }
+

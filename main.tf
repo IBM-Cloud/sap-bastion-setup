@@ -2,13 +2,24 @@ module "pre-init" {
   source = "./modules/pre-init"
 }
 
+module "activity-tracker" {
+  count          = local.ATR_ENABLE == true && var.ATR_PROVISION == true ? 1 : 0
+  source         = "./modules/activity-tracker"
+  depends_on     = [ module.pre-init ]
+  RESOURCE_GROUP = var.RESOURCE_GROUP
+  ATR_PROVISION  = var.ATR_PROVISION
+  REGION         = var.REGION
+  ATR_NAME       = var.ATR_NAME
+  ATR_PLAN       = var.ATR_PLAN
+  ATR_TAGS       = var.ATR_TAGS
+}
+
 module "vpc" {
   source         = "./modules/vpc"
   RESOURCE_GROUP = var.RESOURCE_GROUP
   VPC            = var.VPC
   count          = var.VPC_EXISTS == "no" ? 1 : 0
 }
-
 
 module "validate-subnet" {
   source         = "./modules/validate-subnet"
@@ -56,17 +67,18 @@ module "custom-ssh" {
 }
 
 module "volumes" {
-  source         = "./modules/volumes"
-  depends_on     = [module.vpc, module.vpc-subnet]
-  ZONE           = var.ZONES[0]
-  RESOURCE_GROUP = var.RESOURCE_GROUP
-  HOSTNAME       = var.HOSTNAME
-  VOL_PROFILE    = "custom"
-  VOL_IOPS       = "3000"
-  VOL1           = var.VOL1
+  count                 = var.DESTROY_BASTION_SERVER_VSI == false ? 1 : 0
+  source                = "./modules/volumes"
+  depends_on            = [module.vpc, module.vpc-subnet]
+  ZONE                  = var.ZONES[0]
+  RESOURCE_GROUP        = var.RESOURCE_GROUP
+  HOSTNAME              = var.HOSTNAME
+  VOL_PROFILE           = "general-purpose"
+  VOL1                  = var.VOL1
 }
 
 module "vsi" {
+  count          = var.DESTROY_BASTION_SERVER_VSI == false ? 1 : 0
   source         = "./modules/vsi"
   depends_on     = [module.volumes]
   ZONE           = var.ZONES[0]
@@ -80,12 +92,13 @@ module "vsi" {
   sg-ssh         = one(module.custom-ssh[*].sg-ssh)
   securitygroup  = one(module.vpc-security-group[*].securitygroup)
   sg-sch-ssh     = one(module.sg-sch-ssh[*].sg-sch-ssh)
-  VOLUMES_LIST   = module.volumes.volumes_list
+  VOLUMES_LIST   = module.volumes[0].volumes_list
 }
 
 module "install-prereq" {
+  count           = var.DESTROY_BASTION_SERVER_VSI == false ? 1 : 0
   source          = "./modules/install-prereq"
   depends_on      = [module.vsi]
-  IP              = module.vsi.FLOATING-IP
+  IP              = module.vsi[0].FLOATING-IP
   private_ssh_key = var.PRIVATE_SSH_KEY
 }

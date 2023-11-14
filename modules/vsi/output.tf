@@ -1,11 +1,11 @@
 output "HOSTNAME" {
-  value = ibm_is_instance.vsi.name
+  value = length(ibm_is_instance.vsi) > 0 ? ibm_is_instance.vsi.name : ""
 }
 
 output "FLOATING-IP" {
-  value = ibm_is_floating_ip.fip.address
+  value = length(ibm_is_floating_ip.fip) > 0 ? ibm_is_floating_ip.fip.address : ""
 }
 
 output "PRIVATE-IP" {
-  value = ibm_is_instance.vsi.primary_network_interface.0.primary_ip.0.address
+  value = length(ibm_is_instance.vsi) > 0 ? ibm_is_instance.vsi.primary_network_interface.0.primary_ip.0.address : ""
 }

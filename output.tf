@@ -1,13 +1,13 @@
 output "HOSTNAME" {
-  value = module.vsi.HOSTNAME
+  value =  length(module.vsi) > 0 ? module.vsi[0].HOSTNAME : ""
 }
 
 output "FLOATING_IP" {
-  value = module.vsi.FLOATING-IP
+  value = length(module.vsi) > 0 ? module.vsi[0].FLOATING-IP : ""
 }
 
 output "PRIVATE_IP" {
-  value = module.vsi.PRIVATE-IP
+  value = length(module.vsi) > 0 ? module.vsi[0].PRIVATE-IP : ""
 }
 
 output "REGION" {
@@ -20,4 +20,15 @@ output "VPC" {
 
 output "SECURITY_GROUP" {
   value = module.vpc-security-group.SECURITY_GROUP_NAME
+}
+
+output "SUBNET" {
+  value = [ for i in range(length(var.SUBNETS)) :
+           var.SUBNETS[i]
+  ]
+}
+
+output "ATR_INSTANCE_NAME" {
+  description = "Activity Tracker instance name."
+  value       = var.ATR_NAME
 }
