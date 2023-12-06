@@ -45,7 +45,7 @@ variable "ZONES" {
 
 variable "SUBNETS" {
   type        = list(string)
-  description = "A list of subnets to be created, corresponding to the IBM Cloud zones selected. Multiple values separated by comma are allowed. SUBNET names must be a list of strings. The list must contain at least one subnet name and maximum three subnet names. Example [\"sn-23000000-01\", \"sn-23000000-02\", \"sn-23000000-03\"]"
+  description = "A list of subnets to be created or existing ones, corresponding to the IBM Cloud zones selected. Multiple values separated by comma are allowed. SUBNET names must be a list of strings. The list must contain at least one subnet name and maximum three subnet names. Example [\"sn-23000000-01\", \"sn-23000000-02\", \"sn-23000000-03\"]"
 
   validation {
     condition     = length(var.SUBNETS) > 0 && length(var.SUBNETS) <= 3
