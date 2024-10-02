@@ -12,6 +12,7 @@ data "ibm_is_security_group" "sg-sch-ssh" {
 
 data "ibm_is_subnet" "subnet" {
   name = var.SUBNET
+  vpc = data.ibm_is_vpc.vpc.id
 }
 
 data "ibm_is_image" "image" {

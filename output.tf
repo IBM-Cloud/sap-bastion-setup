@@ -28,7 +28,16 @@ output "SUBNET" {
   ]
 }
 
-output "ATR_INSTANCE_NAME" {
-  description = "Activity Tracker instance name."
-  value       = var.ATR_NAME
+
+# output "SECRETS_MANAGER_ID" {
+#   value = data.local_file.sm_guid.content
+# }
+
+
+output "VPN_HOSTNAME" {
+  value       = module.vpn.VPN_HOSTNAME
+}
+
+output "OVPN_FILE" {
+  value = length(module.ovpn) > 0 ? module.ovpn[0].OVPN_FILE : null
 }

@@ -19,12 +19,16 @@ variable "RESOURCE_GROUP" {
   default     = "Default"
 }
 
+data "ibm_resource_group" "group" {
+  name = var.RESOURCE_GROUP
+}
+
 variable "REGION" {
   type            = string
   description     = "The cloud region where to deploy the SAP solution. The regions and zones for VPC are listed here: https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones#zones-vpc. Review supported locations in IBM Cloud Schematics here: https://cloud.ibm.com/docs/schematics?topic=schematics-locations."
   validation {
-    condition     = contains(["eu-de", "eu-gb", "us-south", "us-east"], var.REGION)
-    error_message = "The REGION must be one of: eu-de, eu-gb, us-south, us-east."
+    condition     = contains(["eu-de", "eu-gb", "us-south", "us-east", "ca-tor", "au-syd", "jp-osa", "jp-tok", "eu-es", "br-sao"], var.REGION)
+    error_message = "The REGION must be one of: eu-de, eu-gb, us-south, us-east, ca-tor, au-syd, jp-osa, jp-tok, eu-es, br-sao."
   }
 }
 
@@ -35,23 +39,19 @@ variable "ZONES" {
     condition     = length(var.ZONES) > 0 && length(var.ZONES) <= 3
     error_message = "Number of zones should be higher than 0 or less than or equal to 3"
   }
-
   validation {
-    condition     = alltrue([for zone in var.ZONES : can(regex("^(eu-de|eu-gb|us-south|us-east)-(1|2|3)$", zone))])
+    condition     = alltrue([for zone in var.ZONES : can(regex("^(eu-de|eu-gb|us-south|us-east|ca-tor|au-syd|jp-osa|jp-tok|eu-es|br-sao)-(1|2|3)$", zone))])
     error_message = "The ZONEs are not valid."
   }
-
 }
 
 variable "SUBNETS" {
   type        = list(string)
   description = "A list of subnets to be created or existing ones, corresponding to the IBM Cloud zones selected. Multiple values separated by comma are allowed. SUBNET names must be a list of strings. The list must contain at least one subnet name and maximum three subnet names. Example [\"sn-23000000-01\", \"sn-23000000-02\", \"sn-23000000-03\"]"
-
   validation {
     condition     = length(var.SUBNETS) > 0 && length(var.SUBNETS) <= 3
     error_message = "Number of subnets should be higher than 0 and less than or equal to 3"
   }
-
   validation {
     condition     = alltrue([for sub in var.SUBNETS : length(regexall("^([a-z]|[a-z][-a-z0-9]*[a-z0-9]|[0-9][-a-z0-9]*([a-z]|[-a-z][-a-z0-9]*[a-z0-9]))$", sub)) > 0])
     error_message = "SUBNETs are not valid."
@@ -119,34 +119,25 @@ variable "VOL1" {
   default     = "100"
 }
 
-##############################################################
-# The variables used in Activity Tracker service.
-##############################################################
-
-variable "ATR_NAME" {
+variable "VPN_PREFIX" {
   type        = string
-  description = "The name of the Activity Tracker instance to be created or the name of an existent Activity Tracker instance, in the same region chosen for the SAP system deployment. The list of available Activity Tracker is available here: https://cloud.ibm.com/observe/activitytracker"
-  default     = ""
+  description = "The prefix to use for the VPN related elements."
 }
 
-variable "ATR_PROVISION" {
-  type        = bool
-  description = "Specifies if a new Activity Tracker instance will be provisioned. Only one Activity Tracker per region is allowed. Allowed values: true and false."
-  default     = true
-}
-
-
-variable "ATR_PLAN" {
+variable "SM_PLAN" {
   type        = string
-  description = "Mandatory only if ATR_PROVISION is set to true. The list of service plans - https://cloud.ibm.com/docs/activity-tracker?topic=activity-tracker-service_plan#service_plan."
-  default     = "lite"
-
+  default = "7713c3a8-3be8-4a9a-81bb-ee822fcaac3d"
+  description = "The pricing plan that you want to use for the Secrets Manager instance, provided as a plan ID. Use 869c191a-3c2a-4faf-98be-18d48f95ba1f for trial or 7713c3a8-3be8-4a9a-81bb-ee822fcaac3d for standard."
 }
 
-variable "ATR_TAGS" {
-  type        = list(string)
-  description = "Optional parameter. A list of user tags associated with the activity tracker instance. Example: ATR_TAGS = [\"activity-tracker-cos\"]."
-  default     = null
+variable "VPN_CLIENT_IP_POOL" {
+  description = <<-EOD
+    Optional variable to specify the CIDR for VPN client IP pool space. This is the IP space that will be
+    used by machines connecting with the VPN. You should only need to change this if you have a conflict
+    with your local network.
+  EOD
+  type        = string
+  default     = "192.168.8.0/22"
 }
 
 variable "DESTROY_BASTION_SERVER_VSI" {
@@ -159,24 +150,11 @@ data "local_file" "input" {
   filename = "modules/vpc/security-group/sg-sch-ssh/found.ip.tmpl"
 }
 
+data "local_file" "sm_guid" {
+  filename = "/tmp/.schematics/sm_guid.tmpl"
+  depends_on = [module.secretmanager]
+}
+
 locals {
   subnets_zones = zipmap(var.SUBNETS, var.ZONES)
-  ATR_ENABLE = true
-}
-
-resource "null_resource" "check_atr_name" {
-  count             = local.ATR_ENABLE == true ? 1 : 0
-  lifecycle {
-    precondition {
-      condition     = var.ATR_NAME != "" && var.ATR_NAME != null
-      error_message = "The name of an EXISTENT Activity Tracker in the same region must be specified."
-    }
-  }
-}
-
-data "ibm_resource_instance" "activity_tracker" {
-  count             = (local.ATR_ENABLE == false || var.ATR_PROVISION == true) ? 0 : 1
-  name              = var.ATR_NAME
-  location          = var.REGION
-  service           = "logdnaat"
 }
