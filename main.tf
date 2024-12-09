@@ -95,7 +95,8 @@ module "install-prereq" {
 
 
 module "secretmanager" {
-  source              = "./modules/secretmanager"
+  source = "./modules/secretmanager"
+  count  = var.VPN_CREATE == true ? 1 : 0
   sm_name = "${var.VPN_PREFIX}_secretmanager"
   REGION = var.REGION
   RESOURCE_GROUP_ID   = data.ibm_resource_group.group.id
@@ -104,6 +105,7 @@ module "secretmanager" {
 }
 
 resource "null_resource" "wait" {
+  count  = var.VPN_CREATE == true ? 1 : 0
   provisioner "local-exec" {
     command = "sleep 700 "
   }
@@ -111,21 +113,25 @@ resource "null_resource" "wait" {
 }
 
 module "certificate" {
-  source              = "./modules/certificate"
+  source = "./modules/certificate"
+  count  = var.VPN_CREATE == true ? 1 : 0
   depends_on = [null_resource.wait]
-  instance_id = data.local_file.sm_guid.content
+  instance_id = data.local_file.sm_guid[0].content
   resource_group_id   = data.ibm_resource_group.group.id
   name                = "${var.VPN_PREFIX}_cert"
   REGION       =  var.REGION
 }
 
 module "vpn" {
-  source            = "./modules/vpn"
+  source = "./modules/vpn"
+  count  = var.VPN_CREATE == true ? 1 : 0
   depends_on	      = [ module.certificate,module.vpc, module.vpc-subnet, module.vpc-security-group]
   VPN_PREFIX        = var.VPN_PREFIX
+  VPN_NETWORK_PORT_NUMBER = var.VPN_NETWORK_PORT_NUMBER
+  VPN_NETWORK_PORT_PROTOCOL = var.VPN_NETWORK_PORT_PROTOCOL
   resource_group_id = data.ibm_resource_group.group.id
   resource_group_id_bastion = module.vpc-security-group.securitygroup
-  certificate_crn   = module.certificate.server_cert_crn
+  certificate_crn   = module.certificate[0].server_cert_crn
   VPN_CLIENT_IP_POOL = var.VPN_CLIENT_IP_POOL
   zone              = var.ZONES[0]
   VPC               = var.VPC
@@ -133,13 +139,15 @@ module "vpn" {
 }
 
 module "ovpn" {
-  source       = "./modules/ovpn"
-  count  = var.DESTROY_BASTION_SERVER_VSI == false ? 1 : 0
+  source = "./modules/ovpn"
+  count  = var.DESTROY_BASTION_SERVER_VSI == false && var.VPN_CREATE == true ? 1 : 0
   depends_on	= [ module.vpn,module.vsi ]
-  vpn_hostname = module.vpn.VPN_HOSTNAME
-  ca           = module.certificate.ca
-  client_cert  = module.certificate.client_cert
-  client_key   = module.certificate.client_key
+  vpn_hostname = module.vpn[0].VPN_HOSTNAME
+  ca           = module.certificate[0].ca
+  client_cert  = module.certificate[0].client_cert
+  client_key   = module.certificate[0].client_key
   bastion_ip   = length(module.vsi) > 0 ? module.vsi[0].FLOATING-IP : null
   private_key  = var.PRIVATE_SSH_KEY
+  VPN_NETWORK_PORT_NUMBER = var.VPN_NETWORK_PORT_NUMBER
+  VPN_NETWORK_PORT_PROTOCOL = var.VPN_NETWORK_PORT_PROTOCOL
 }

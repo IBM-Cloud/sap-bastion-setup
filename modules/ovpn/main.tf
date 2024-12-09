@@ -3,7 +3,9 @@ locals {
     "hostname"    = var.vpn_hostname,
     "ca"          = var.ca,
     "client_key"  = var.client_key,
-    "client_cert" = var.client_cert
+    "client_cert" = var.client_cert,
+    "protocol"    = var.VPN_NETWORK_PORT_PROTOCOL,
+    "port"        = var.VPN_NETWORK_PORT_NUMBER
   })
 }
 

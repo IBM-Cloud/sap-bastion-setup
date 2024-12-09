@@ -2,8 +2,8 @@
 
 client
 dev tun
-proto udp
-port 443
+proto ${protocol}
+port ${port}
 remote ${hostname}
 resolv-retry infinite
 remote-cert-tls server

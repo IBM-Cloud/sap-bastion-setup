@@ -122,13 +122,46 @@ variable "VOL1" {
 variable "VPN_PREFIX" {
   type        = string
   description = "The prefix to use for the VPN related elements."
+  default = ""
+  validation {
+    condition = var.VPN_CREATE == false || (var.VPN_CREATE == true && (length(regexall("^([a-z]|[a-z][-a-z0-9]*[a-z0-9]|[0-9][-a-z0-9]*([a-z]|[-a-z][-a-z0-9]*[a-z0-9]))$", var.VPN_PREFIX)) > 0))
+    error_message = "VPN prefix must start with a lowercase letter or a digit and can contain lowercase letters, digits, and dashes, but no underscores or leading/trailing dashes."
+  }
 }
+
+variable "VPN_NETWORK_PORT_NUMBER" {
+  type        = number
+  default     = 1194
+  description = "The port number to be used for the VPN solution. (must be between 1 and 65535)"
+
+  validation {
+    condition     = var.VPN_NETWORK_PORT_NUMBER >= 1 && var.VPN_NETWORK_PORT_NUMBER <= 65535
+    error_message = "The VPN port number must be between 1 and 65535."
+  }
+}
+
+variable "VPN_NETWORK_PORT_PROTOCOL" {
+  type        = string
+  default     = "udp"
+  description = "The protocol to be used for the VPN solution. (must be either 'tcp' or 'udp')"
+
+  validation {
+    condition     = contains(["tcp", "udp"], var.VPN_NETWORK_PORT_PROTOCOL)
+    error_message = "The VPN protocol must be either 'tcp' or 'udp'."
+  }
+}
+
 
 variable "SM_PLAN" {
   type        = string
   default = "7713c3a8-3be8-4a9a-81bb-ee822fcaac3d"
   description = "The pricing plan that you want to use for the Secrets Manager instance, provided as a plan ID. Use 869c191a-3c2a-4faf-98be-18d48f95ba1f for trial or 7713c3a8-3be8-4a9a-81bb-ee822fcaac3d for standard."
+  validation {
+    condition     = var.SM_PLAN == "7713c3a8-3be8-4a9a-81bb-ee822fcaac3d" || var.SM_PLAN == "869c191a-3c2a-4faf-98be-18d48f95ba1f"
+    error_message = "The value for this parameter can only be 7713c3a8-3be8-4a9a-81bb-ee822fcaac3d or 869c191a-3c2a-4faf-98be-18d48f95ba1f."
+  }
 }
+
 
 variable "VPN_CLIENT_IP_POOL" {
   description = <<-EOD
@@ -138,8 +171,17 @@ variable "VPN_CLIENT_IP_POOL" {
   EOD
   type        = string
   default     = "192.168.8.0/22"
+  validation {
+    condition     = can(cidrsubnet(var.VPN_CLIENT_IP_POOL, 0, 0)) && var.VPN_CLIENT_IP_POOL != "0.0.0.0/0"
+    error_message = "This client IP pool is not allowed or not a valid CIDR."
+  }
 }
 
+variable "VPN_CREATE" {
+  type            = bool
+  description     = "Specifies if you want a VPN solution to be added to your bastion setup. If 'yes' a VPN solution will be automatically deployed for you, allowing you access to the private ip addressing space of your VPC."
+  default = false
+}
 variable "DESTROY_BASTION_SERVER_VSI" {
   type        = bool
   description = "For the initial deployment, should remain set to false. After the initial deployment, in case there is a wish to destroy the Deployment Server (BASTION Server) VSI, but preserve the rest of the Cloud resources (VPC, Subnet, Security Group, Activity Tracker), in Schematics, the value must be set to true and then the changes must be applied by pressing the \"Apply plan\" button."
@@ -153,6 +195,7 @@ data "local_file" "input" {
 data "local_file" "sm_guid" {
   filename = "/tmp/.schematics/sm_guid.tmpl"
   depends_on = [module.secretmanager]
+  count  = var.VPN_CREATE == true ? 1 : 0
 }
 
 locals {

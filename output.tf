@@ -35,7 +35,7 @@ output "SUBNET" {
 
 
 output "VPN_HOSTNAME" {
-  value       = module.vpn.VPN_HOSTNAME
+  value = length(module.vpn) > 0 ? module.vpn[0].VPN_HOSTNAME: null
 }
 
 output "OVPN_FILE" {

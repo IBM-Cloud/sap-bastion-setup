@@ -5,13 +5,25 @@ resource "ibm_is_security_group" "sg" {
   resource_group = var.resource_group_id
 }
 
-resource "ibm_is_security_group_rule" "ingress" {
+resource "ibm_is_security_group_rule" "ingress_udp" {
   group     = ibm_is_security_group.sg.id
   direction = "inbound"
   remote    = "0.0.0.0/0"
+  count = var.VPN_NETWORK_PORT_PROTOCOL == "udp" ? 1 : 0
   udp {
-    port_min = 443
-    port_max = 443
+    port_min = var.VPN_NETWORK_PORT_NUMBER
+    port_max = var.VPN_NETWORK_PORT_NUMBER
+  }
+}
+
+resource "ibm_is_security_group_rule" "ingress_tcp" {
+  group     = ibm_is_security_group.sg.id
+  direction = "inbound"
+  remote    = "0.0.0.0/0"
+  count = var.VPN_NETWORK_PORT_PROTOCOL == "tcp" ? 1 : 0
+  tcp {
+    port_min = var.VPN_NETWORK_PORT_NUMBER
+    port_max = var.VPN_NETWORK_PORT_NUMBER
   }
 }
 
@@ -39,6 +51,8 @@ resource "ibm_is_vpn_server" "vpn_server" {
   depends_on = [null_resource.wait2]
   certificate_crn        = var.certificate_crn
   client_ip_pool         = var.VPN_CLIENT_IP_POOL
+  port                    = var.VPN_NETWORK_PORT_NUMBER
+  protocol                = var.VPN_NETWORK_PORT_PROTOCOL
   enable_split_tunneling = true
   name                   = var.VPN_PREFIX
   subnets = length(values(data.ibm_is_subnet.subnet_data)) > 1 ? slice([for subnet in values(data.ibm_is_subnet.subnet_data) : subnet.id], 0, 2) : [values(data.ibm_is_subnet.subnet_data)[0].id]

@@ -6,7 +6,7 @@ This automation solution is designed for the deployment of an IBM Cloud Gen2 VPC
 The automatic deployment of a BASTION server (Deployment Server) is required before running the automation to deploy an SAP system in IBM Cloud VPC. The intended usage of the Deployment Server (BASTION Server) is for the remote execution of the Ansible playbooks using Terraform remote-exec in Schematics, at the automatic deployment of the SAP systems but, it can also be used, for example, as a Jump Host, to maintain and administer all SAP solutions within its respective IBM Cloud VPC region. This automation provides a customizable security group and subnets, to enable access, in the corresponding Cloud zones to the SAP/DB VSI's. The Floating IP allows the Deployment Server (BASTION Server) host access to the internet, so that SAP and DB kit files can be downloaded. On top of this, a dedicated VPN solution will be automatically created for you and will provide direct access to the private IP addressing plan of your future SAP servers.
 
 The following software packages are installed on the Deployment Server (BASTION Server):
-- Terraform version 1.9.2 
+- Terraform version 1.9.2
 - the latest available versions of:
     - Ansible
     - Python3
@@ -15,7 +15,7 @@ The following software packages are installed on the Deployment Server (BASTION 
 Terraform is an open source infrastructure as code software tool created by HashiCorp. The Terraform modules are implementing a 'reasonable' set of best practices for the Deployment Server (BASTION Server) host configuration. Your own Organization could have additional requirements that should be applied before the deployment.
 
 **It contains:**  
-- Terraform scripts for deploying a VPC, Subnet, Security Group with default and custom rules, a Public Gateway for SNAT, a VSI with a volume, a Secrets Manager service instance and a VPN Client-to-site Solution . The automation has support for the following versions: Terraform >= 1.9.2 and IBM Cloud provider for Terraform >= 1.62.0.  
+- Terraform scripts for deploying a VPC, Subnet, Security Group with default and custom rules, a Public Gateway for SNAT, a VSI with a volume, a Secrets Manager service instance and a VPN Client-to-site Solution . The automation has support for the following versions: Terraform >= 1.9.0 and IBM Cloud provider for Terraform >= 1.62.0.  
 Note: The deployment was tested with Terraform 1.9.2
 - Bash scripts to install the prerequisites for the Deployment Server (BASTION Server) & STORAGE VSI and for other SAP solutions.
 
@@ -70,9 +70,10 @@ The automation script will generate on the bastion itself an ovpn profile file f
 ## 2.1 Prerequisites
 
 - A general understanding of IBM VPC and VSIs is necessary. 
-- An [IBM Cloud account](https://cloud.ibm.com/registration?cm_sp=ibmdev-_-developer-articles-_-cloudreg).
+- An [IBM Cloud account](https://cloud.ibm.com/registration?cm_sp=ibmdev-_-developer-articles-_-cloudreg)
 - A Resource Group for the Cloud resources. A new Resource Groups can be created [here](https://cloud.ibm.com/account/resource-groups)
-- An IBM Cloud API Key, which can be added in IBM SCHEMATICS, "SETTINGS" menu, by editing the variable "IBMCLOUD_API_KEY" and using sensitive option. The IBM Cloud API Key can be created [here](https://cloud.ibm.com/iam/apikeys).
+- An IBM Cloud API Key, which can be added in IBM SCHEMATICS, "SETTINGS" menu, by editing the variable "IBMCLOUD_API_KEY" and using sensitive option. The IBM Cloud API Key can be created [here](https://cloud.ibm.com/iam/apikeys)
+- An IAM service-to-service authorization for your VPN server and IBM Cloud Secrets Manager; this can be created following the steps under 'Creating an IAM service-to-service authorization' [here](https://cloud.ibm.com/docs/vpc?topic=vpc-client-to-site-authentication#creating-iam-service-to-service)
 
 ## 2.2 Executing the **deployment of the BASTION Server (Deployment Server)** and the **main VPC infrastructure configuration** in GUI (Schematics)
 
@@ -97,7 +98,10 @@ HOSTNAME | Deployment Server (BASTION Server) VSI Hostname. The hostname must ha
 PROFILE |  Deployment Server (BASTION Server) VSI Profile. A list of profiles is available [here](https://cloud.ibm.com/docs/vpc?topic=vpc-profiles) <br /> Default value: "bx2-2x8"
 IMAGE | Deployment Server (BASTION Server) VSI OS Image. A list of images is available [here](https://cloud.ibm.com/docs/vpc?topic=vpc-about-images).<br /> Default value: ibm-redhat-8-8-minimal-amd64-2
 VOL1 [number] | The size, in GB, of the disk to be attached to the Deployment Server (BASTION Server) VSI, for later use as storage for the SAP deployment kits. The mount point for the new volume is: "/storage". <br /> Default value: 100 GB.
+VPN_CREATE | Specifies if you want a VPN solution to be added to your bastion setup. If 'yes' a VPN solution will be automatically deployed for you, allowing you access to the private ip addressing space of your VPC.
 VPN_PREFIX | The prefix to use for the VPN related elements. The prefix set under this variable will be added to the Secrets Manager instance created, also used as a prefix for the VPN's Security Group and it will be used as a name for the VPN server created.
+VPN_NETWORK_PORT_PROTOCOL | The protocol to be used for the VPN solution. (must be either 'tcp' or 'udp')
+VPN_NETWORK_PORT_NUMBER | The port number to be used for the VPN solution. (must be between 1 and 65535)
 SM_PLAN | The pricing plan that you want to use for the Secrets Manager instance, provided as a plan ID. Use 869c191a-3c2a-4faf-98be-18d48f95ba1f for trial or 7713c3a8-3be8-4a9a-81bb-ee822fcaac3d for standard.
 VPN_CLIENT_IP_POOL | Optional variable to specify the CIDR for VPN client IP pool space. This is the IP space that will be used by machines connecting with the VPN. You should only need to change this if you have a conflict with your local network.
 DESTROY_BASTION_SERVER_VSI | For the initial deployment, should remain set to false. After the initial deployment, in case there is a wish to destroy the Deployment Server (BASTION Server) VSI, but preserve the rest of the Cloud resources (VPC, Subnet, Security Group, VPN Solution), in Schematics, the value must be set to true and then the changes must be applied by pressing the "Apply plan" button.
@@ -145,19 +149,17 @@ of the Deployment Server (BASTION Server) host, the hostname, the VPC, the Regio
 
 ### Output sample:
 
-FLOATING_IP = "163.66.82.31"<br />
-HOSTNAME = "bastion-test-vpn-cli"<br />
-OVPN_FILE = "/root/OpenVPN.ovpn"<br />
-PRIVATE_IP = "10.249.0.4"<br />
-REGION = "ca-tor"<br />
-SECURITY_GROUP = "bastion-sg-bastion-test-vpn-cli"<br />
-SUBNET = [
-  "sap-subnet-1",
-  "sap-subnet-2",
-  "sap-subnet-3"
-]<br />
-VPC = "sap-vpc-test-cli"<br />
-VPN_HOSTNAME = "b6dde418085d.ca-tor.vpn-server.appdomain.cloud"<br />
+```
+FLOATING_IP = "163.66.82.31"
+HOSTNAME = "bastion-test-vpn-cli"
+OVPN_FILE = "/root/OpenVPN.ovpn"
+PRIVATE_IP = "10.249.0.4"
+REGION = "ca-tor"
+SECURITY_GROUP = "bastion-sg-bastion-test-vpn-cli"
+SUBNET = ["sap-subnet-1", "sap-subnet-2", "sap-subnet-3"]
+VPC = "sap-vpc-test-cli"
+VPN_HOSTNAME = "b6dde418085d.ca-tor.vpn-server.appdomain.cloud"
+```
 
 8. Your ovpn file will be on the bastion server, under the OVPN_FILE path displayed in the output; please copy the file from there and distribute it to whom you might consider; they should import this file in their OpenVPN client; once connected, they will be able to reach the private ip addressing space of the bastion server.
 

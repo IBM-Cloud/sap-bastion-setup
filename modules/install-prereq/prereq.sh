@@ -28,8 +28,8 @@ ibmcloud -v
 
 # Installing Terraform
 echo -e "\nInstalling Terraform"
-wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -P /tmp/
-unzip /tmp/terraform_1.5.7_linux_amd64.zip -d /usr/local/bin
+wget https://releases.hashicorp.com/terraform/1.9.2/terraform_1.9.2_linux_amd64.zip -P /tmp/
+unzip /tmp/terraform_1.9.2_linux_amd64.zip -d /usr/local/bin
 terraform -v
 
 # Preparing Ansible
